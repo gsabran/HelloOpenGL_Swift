@@ -257,7 +257,7 @@ class OpenGLView: UIView {
     }
     
     func setupDisplayLink() -> Int {
-        let displayLink : CADisplayLink = CADisplayLink(target: self, selector: Selector("render:"))
+        let displayLink : CADisplayLink = CADisplayLink(target: self, selector: #selector(OpenGLView.render(_:)))
         displayLink.addToRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
         return 0
     }

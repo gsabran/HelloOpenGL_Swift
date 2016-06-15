@@ -14,7 +14,7 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
-        let frame = UIScreen.mainScreen().bounds
+        let frame = UIScreen.main().bounds
         let _glView = OpenGLView(frame: frame)
         
         self.view.addSubview(_glView)

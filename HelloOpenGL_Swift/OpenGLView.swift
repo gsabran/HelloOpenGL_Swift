@@ -108,11 +108,11 @@ class OpenGLView: UIView {
     }
     
     func compileShader(shaderName: String, shaderType: GLenum, shader: UnsafeMutablePointer<GLuint>) -> Int {
-        let shaderPath = NSBundle.mainBundle().pathForResource(shaderName, ofType:"glsl")
+        let shaderPath = Bundle.main().pathForResource(shaderName, ofType:"glsl")
         var error : NSError?
         let shaderString: NSString?
         do {
-            shaderString = try NSString(contentsOfFile: shaderPath!, encoding:NSUTF8StringEncoding)
+            shaderString = try NSString(contentsOfFile: shaderPath!, encoding:String.Encoding.utf8.rawValue)
         } catch let error1 as NSError {
             error = error1
             shaderString = nil
@@ -122,69 +122,70 @@ class OpenGLView: UIView {
             return -1
         }
         
-        shader.memory = glCreateShader(shaderType)
-        if (shader.memory == 0) {
+        shader.pointee = glCreateShader(shaderType)
+        if (shader.pointee == 0) {
             NSLog("OpenGLView compileShader():  glCreateShader failed")
             return -1
         }
-        var shaderStringUTF8 = shaderString!.UTF8String
+        var shaderStringUTF8 = shaderString!.utf8String
         var shaderStringLength: GLint = GLint(Int32(shaderString!.length))
-        glShaderSource(shader.memory, 1, &shaderStringUTF8, &shaderStringLength)
+        glShaderSource(shader.pointee, 1, &shaderStringUTF8, &shaderStringLength)
         
-        glCompileShader(shader.memory);
-        let success = UnsafeMutablePointer<GLint>.alloc(1)
-        glGetShaderiv(shader.memory, GLenum(GL_COMPILE_STATUS), success)
-
-        if (success != nil && success.memory == GL_FALSE) {
-            let infoLog = UnsafeMutablePointer<GLchar>.alloc(256)
-            let infoLogLength = UnsafeMutablePointer<GLsizei>.alloc(1)
+        glCompileShader(shader.pointee);
+        var success = GLint()
+        glGetShaderiv(shader.pointee, GLenum(GL_COMPILE_STATUS), &success)
+        
+        if (success == GL_FALSE) {
+            let infoLog = UnsafeMutablePointer<GLchar>(allocatingCapacity: 256)
+            var infoLogLength = GLsizei()
             
-            glGetShaderInfoLog(shader.memory, GLsizei(sizeof(GLchar) * 256), infoLogLength, infoLog)
-            NSLog("OpenGLView compileShader():  glCompileShader() failed:  %@", String.fromCString(infoLog)!)
+            glGetShaderInfoLog(shader.pointee, GLsizei(sizeof(GLchar) * 256), &infoLogLength, infoLog)
+            NSLog("OpenGLView compileShader():  glCompileShader() failed:  %@", String(cString: infoLog))
             
-            infoLog.destroy()
-            infoLogLength.destroy()
+            infoLog.deallocateCapacity(256)
             return -1
         }
         
-        success.destroy()
         return 0
     }
-
+    
     func compileShaders() -> Int {
-        let vertexShader = UnsafeMutablePointer<GLuint>.alloc(1)
-        if (self.compileShader("SimpleVertex", shaderType: GLenum(GL_VERTEX_SHADER), shader: vertexShader) != 0 ) {
+        let vertexShader = UnsafeMutablePointer<GLuint>(allocatingCapacity: 1)
+        if (self.compileShader(shaderName: "SimpleVertex", shaderType: GLenum(GL_VERTEX_SHADER), shader: vertexShader) != 0 ) {
             NSLog("OpenGLView compileShaders():  compileShader() failed")
             return -1
         }
         
-        let fragmentShader = UnsafeMutablePointer<GLuint>.alloc(1)
-        if (self.compileShader("SimpleFragment", shaderType: GLenum(GL_FRAGMENT_SHADER), shader: fragmentShader) != 0) {
+        let fragmentShader = UnsafeMutablePointer<GLuint>(allocatingCapacity: 1)
+        if (self.compileShader(shaderName: "SimpleFragment", shaderType: GLenum(GL_FRAGMENT_SHADER), shader: fragmentShader) != 0) {
             NSLog("OpenGLView compileShaders():  compileShader() failed")
             return -1
         }
-
+        
         let program = glCreateProgram()
-        glAttachShader(program, vertexShader.memory)
-        glAttachShader(program, fragmentShader.memory)
+        glAttachShader(program, vertexShader.pointee)
+        glAttachShader(program, fragmentShader.pointee)
         glLinkProgram(program)
-
-        let success = UnsafeMutablePointer<GLint>.alloc(1)
-        glGetProgramiv(program, GLenum(GL_LINK_STATUS), success)
-        if (success != nil && success.memory == GL_FALSE) {
-            let infoLog = UnsafeMutablePointer<GLchar>.alloc(1024)
-            let infoLogLength = UnsafeMutablePointer<GLsizei>.alloc(1)
+        
+        var success = GLint()
+        
+        glGetProgramiv(program, GLenum(GL_LINK_STATUS), &success)
+        if (success == GL_FALSE) {
+            let infoLog = UnsafeMutablePointer<GLchar>(allocatingCapacity: 1024)
+            var infoLogLength = GLsizei()
             
-            glGetProgramInfoLog(program, GLsizei(sizeof(GLchar) * 1024), infoLogLength, infoLog)
-            NSLog("OpenGLView compileShaders():  glLinkProgram() failed:  %@", String.fromCString(infoLog)!)
+            glGetProgramInfoLog(program, GLsizei(sizeof(GLchar) * 1024), &infoLogLength, infoLog)
+            NSLog("OpenGLView compileShaders():  glLinkProgram() failed:  %@", String(cString:  infoLog))
             
-            infoLog.destroy()
-            infoLogLength.destroy()
+            infoLog.deallocateCapacity(1024)
+            fragmentShader.deallocateCapacity(1)
+            vertexShader.deallocateCapacity(1)
+            
             return -1
         }
-
+        
         glUseProgram(program)
-
+        
         _positionSlot = GLuint(glGetAttribLocation(program, "Position"))
         _colorSlot = GLuint(glGetAttribLocation(program, "SourceColor"))
         glEnableVertexAttribArray(_positionSlot)
@@ -192,10 +193,9 @@ class OpenGLView: UIView {
         
         _projectionUniform = GLuint(glGetUniformLocation(program, "Projection"))
         _modelViewUniform = GLuint(glGetUniformLocation(program, "Modelview"))
-
-        fragmentShader.destroy()
-        vertexShader.destroy()
-        success.destroy()
+        
+        fragmentShader.deallocateCapacity(1)
+        vertexShader.deallocateCapacity(1)
         return 0
     }
     
@@ -206,16 +206,17 @@ class OpenGLView: UIView {
         
         let projection = CC3GLMatrix.matrix()
         let h : CGFloat = 4.0 * self.frame.size.height / self.frame.size.width
-        projection.populateFromFrustumLeft(GLfloat(-2), andRight: GLfloat(2), andBottom: GLfloat(-h/2), andTop: GLfloat(h/2), andNear: GLfloat(4), andFar: GLfloat(10))
-        glUniformMatrix4fv(GLint(_projectionUniform), 1, 0, projection.glMatrix)
+        projection!.populate(fromFrustumLeft: GLfloat(-2), andRight: GLfloat(2), andBottom: GLfloat(-h/2), andTop: GLfloat(h/2), andNear: GLfloat(4), andFar: GLfloat(10))
+        
+        glUniformMatrix4fv(GLint(_projectionUniform), 1, 0, projection!.glMatrix)
         
         let modelView = CC3GLMatrix.matrix()
-        modelView.populateFromTranslation(CC3VectorMake(GLfloat(sin(CACurrentMediaTime())), GLfloat(0), GLfloat(-7)))
+        modelView!.populate(fromTranslation: CC3VectorMake(GLfloat(sin(CACurrentMediaTime())), GLfloat(0), GLfloat(-7)))
         
         _currentRotation += Float(displayLink.duration) * Float(90)
-        modelView.rotateBy(CC3VectorMake(_currentRotation, _currentRotation, 0))
+        modelView!.rotate(by: CC3VectorMake(_currentRotation, _currentRotation, 0))
         
-        glUniformMatrix4fv(GLint(_modelViewUniform), 1, 0, modelView.glMatrix)
+        glUniformMatrix4fv(GLint(_modelViewUniform), 1, 0, modelView!.glMatrix)
         glViewport(0, 0, GLsizei(self.frame.size.width), GLsizei(self.frame.size.height));
         
         let positionSlotFirstComponent = UnsafePointer<Int>(bitPattern:0)
@@ -225,24 +226,24 @@ class OpenGLView: UIView {
         glEnableVertexAttribArray(_colorSlot)
         let colorSlotFirstComponent = UnsafePointer<Int>(bitPattern:sizeof(Float) * 3)
         glVertexAttribPointer(_colorSlot, 4, GLenum(GL_FLOAT), GLboolean(GL_FALSE), GLsizei(sizeof(Vertex)), colorSlotFirstComponent)
-
+        
         let vertextBufferOffset = UnsafeMutablePointer<Void>(bitPattern: 0)
         glDrawElements(GLenum(GL_TRIANGLES), GLsizei((_indices.count * sizeof(GLubyte))/sizeof(GLubyte)),
-             GLenum(GL_UNSIGNED_BYTE), vertextBufferOffset)
+                       GLenum(GL_UNSIGNED_BYTE), vertextBufferOffset)
         
         _context!.presentRenderbuffer(Int(GL_RENDERBUFFER))
         return 0
     }
     
     func setupContext() -> Int {
-        let api : EAGLRenderingAPI = EAGLRenderingAPI.OpenGLES2
-        _context = EAGLContext(API: api)
+        let api : EAGLRenderingAPI = EAGLRenderingAPI.openGLES2
+        _context = EAGLContext(api: api)
         
         if (_context == nil) {
             NSLog("Failed to initialize OpenGLES 2.0 context")
             return -1
         }
-        if (!EAGLContext.setCurrentContext(_context)) {
+        if (!EAGLContext.setCurrent(_context)) {
             NSLog("Failed to set current OpenGL context")
             return -1
         }
@@ -257,8 +258,8 @@ class OpenGLView: UIView {
     }
     
     func setupDisplayLink() -> Int {
-        let displayLink : CADisplayLink = CADisplayLink(target: self, selector: #selector(OpenGLView.render(_:)))
-        displayLink.addToRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
+        let displayLink : CADisplayLink = CADisplayLink(target: self, selector: #selector(OpenGLView.render(displayLink:)))
+        displayLink.add(to: RunLoop.current(), forMode: RunLoopMode.defaultRunLoopMode.rawValue)
         return 0
     }
     
@@ -267,7 +268,7 @@ class OpenGLView: UIView {
         glGenFramebuffers(1, &framebuffer)
         glBindFramebuffer(GLenum(GL_FRAMEBUFFER), framebuffer)
         glFramebufferRenderbuffer(GLenum(GL_FRAMEBUFFER), GLenum(GL_COLOR_ATTACHMENT0),
-            GLenum(GL_RENDERBUFFER), _colorRenderBuffer)
+                                  GLenum(GL_RENDERBUFFER), _colorRenderBuffer)
         glFramebufferRenderbuffer(GLenum(GL_FRAMEBUFFER), GLenum(GL_DEPTH_ATTACHMENT), GLenum(GL_RENDERBUFFER), _depthRenderBuffer);
         return 0
     }
@@ -278,7 +279,7 @@ class OpenGLView: UIView {
             NSLog("setupLayer:  _eaglLayer is nil")
             return -1
         }
-        _eaglLayer!.opaque = true
+        _eaglLayer!.isOpaque = true
         return 0
     }
     
@@ -294,7 +295,7 @@ class OpenGLView: UIView {
             NSLog("setupRenderBuffer():  _eagLayer is nil")
             return -1
         }
-        if (_context!.renderbufferStorage(Int(GL_RENDERBUFFER), fromDrawable: _eaglLayer!) == false) {
+        if (_context!.renderbufferStorage(Int(GL_RENDERBUFFER), from: _eaglLayer!) == false) {
             NSLog("setupRenderBuffer():  renderbufferStorage() failed")
             return -1
         }

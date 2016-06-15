@@ -2,4 +2,4 @@
 
 A Swift implementation of Ray Wenderlich's OpenGL ES 2.0 Tutorial
 
-Compiled in Xcode 7.3 beta 4.
+Compiled in Xcode 8.0 beta (8S128d).

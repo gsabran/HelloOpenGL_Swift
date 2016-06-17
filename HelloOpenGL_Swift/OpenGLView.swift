@@ -227,9 +227,9 @@ class OpenGLView: UIView {
         let colorSlotFirstComponent = UnsafePointer<Int>(bitPattern:sizeof(Float) * 3)
         glVertexAttribPointer(_colorSlot, 4, GLenum(GL_FLOAT), GLboolean(GL_FALSE), GLsizei(sizeof(Vertex)), colorSlotFirstComponent)
         
-        let vertextBufferOffset = UnsafeMutablePointer<Void>(bitPattern: 0)
+        let vertexBufferOffset = UnsafeMutablePointer<Void>(bitPattern: 0)
         glDrawElements(GLenum(GL_TRIANGLES), GLsizei((_indices.count * sizeof(GLubyte))/sizeof(GLubyte)),
-                       GLenum(GL_UNSIGNED_BYTE), vertextBufferOffset)
+                       GLenum(GL_UNSIGNED_BYTE), vertexBufferOffset)
         
         _context!.presentRenderbuffer(Int(GL_RENDERBUFFER))
         return 0

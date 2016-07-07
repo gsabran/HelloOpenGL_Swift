@@ -23,6 +23,8 @@ struct Vertex {
     var TexCoord: (Float, Float)
 }
 
+let TEX_COORD_MAX : Float = 1.0
+
 class OpenGLView: UIView {
     var _context: EAGLContext?
     var _colorRenderBuffer = GLuint()
@@ -41,14 +43,36 @@ class OpenGLView: UIView {
     
     
     var _vertices = [
-        Vertex(Position: ( 1, -1,  0), Color: (1, 0, 0, 1), TexCoord: (1, 0)),
-        Vertex(Position: ( 1,  1,  0), Color: (1, 0, 0, 1), TexCoord: (1, 1)),
-        Vertex(Position: (-1,  1,  0), Color: (0, 1, 0, 1), TexCoord: (0, 1)),
-        Vertex(Position: (-1, -1,  0), Color: (0, 1, 0, 1), TexCoord: (0, 0)),
-        Vertex(Position: ( 1, -1, -1), Color: (1, 0, 0, 1), TexCoord: (1, 0)),
-        Vertex(Position: ( 1,  1, -1), Color: (1, 0, 0, 1), TexCoord: (1, 1)),
-        Vertex(Position: (-1,  1, -1), Color: (0, 1, 0, 1), TexCoord: (0, 1)),
-        Vertex(Position: (-1, -1, -1), Color: (0, 1, 0, 1), TexCoord: (0, 0))
+        // Front
+        Vertex(Position: (1, -1, 0), Color: (1, 0, 0, 1), TexCoord: (TEX_COORD_MAX, 0)),
+        Vertex(Position: (1, 1, 0), Color: (0, 1, 0, 1), TexCoord: (TEX_COORD_MAX, TEX_COORD_MAX)),
+        Vertex(Position: (-1, 1, 0), Color: (0, 0, 1, 1), TexCoord: (0, TEX_COORD_MAX)),
+        Vertex(Position: (-1, -1, 0), Color: (0, 0, 0, 1), TexCoord: (0, 0)),
+        // Back
+        Vertex(Position: (1, 1, -2), Color: (1, 0, 0, 1), TexCoord: (TEX_COORD_MAX, 0)),
+        Vertex(Position: (-1, -1, -2), Color: (0, 1, 0, 1), TexCoord: (TEX_COORD_MAX, TEX_COORD_MAX)),
+        Vertex(Position: (1, -1, -2), Color: (0, 0, 1, 1), TexCoord: (0, TEX_COORD_MAX)),
+        Vertex(Position: (-1, 1, -2), Color: (0, 0, 0, 1), TexCoord: (0, 0)),
+        // Left
+        Vertex(Position: (-1, -1, 0), Color: (1, 0, 0, 1), TexCoord: (TEX_COORD_MAX, 0)),
+        Vertex(Position: (-1, 1, 0), Color: (0, 1, 0, 1), TexCoord: (TEX_COORD_MAX, TEX_COORD_MAX)),
+        Vertex(Position: (-1, 1, -2), Color: (0, 0, 1, 1), TexCoord: (0, TEX_COORD_MAX)),
+        Vertex(Position: (-1, -1, -2), Color: (0, 0, 0, 1), TexCoord: (0, 0)),
+        // Right
+        Vertex(Position: (1, -1, -2), Color: (1, 0, 0, 1), TexCoord: (TEX_COORD_MAX, 0)),
+        Vertex(Position: (1, 1, -2), Color: (0, 1, 0, 1), TexCoord: (TEX_COORD_MAX, TEX_COORD_MAX)),
+        Vertex(Position: (1, 1, 0), Color: (0, 0, 1, 1), TexCoord: (0, TEX_COORD_MAX)),
+        Vertex(Position: (1, -1, 0), Color: (0, 0, 0, 1), TexCoord: (0, 0)),
+        // Top
+        Vertex(Position: (1, 1, 0), Color: (1, 0, 0, 1), TexCoord: (TEX_COORD_MAX, 0)),
+        Vertex(Position: (1, 1, -2), Color: (0, 1, 0, 1), TexCoord: (TEX_COORD_MAX, TEX_COORD_MAX)),
+        Vertex(Position: (-1, 1, -2), Color: (0, 0, 1, 1), TexCoord: (0, TEX_COORD_MAX)),
+        Vertex(Position: (-1, 1, 0), Color: (0, 0, 0, 1), TexCoord: (0, 0)),
+        // Bottom
+        Vertex(Position: (1, -1, -2), Color: (1, 0, 0, 1), TexCoord: (TEX_COORD_MAX, 0)),
+        Vertex(Position: (1, -1, 0), Color: (0, 1, 0, 1), TexCoord: (TEX_COORD_MAX, TEX_COORD_MAX)),
+        Vertex(Position: (-1, -1, 0), Color: (0, 0, 1, 1), TexCoord: (0, TEX_COORD_MAX)),
+        Vertex(Position: (-1, -1, -2), Color: (0, 0, 0, 1), TexCoord: (0, 0)),
     ]
     
     var _indices : [GLubyte] = [
@@ -56,20 +80,20 @@ class OpenGLView: UIView {
         0, 1, 2,
         2, 3, 0,
         // Back
-        4, 6, 5,
-        4, 7, 6,
+        4, 5, 6,
+        4, 5, 7,
         // Left
-        2, 7, 3,
-        7, 6, 2,
+        8, 9, 10,
+        10, 11, 8,
         // Right
-        0, 4, 1,
-        4, 1, 5,
+        12, 13, 14,
+        14, 15, 12,
         // Top
-        6, 2, 1,
-        1, 6, 5,
+        16, 17, 18,
+        18, 19, 16,
         // Bottom
-        0, 3, 7,
-        0, 7, 4
+        20, 21, 22,
+        22, 23, 20
     ]
     
     override init(frame: CGRect) {

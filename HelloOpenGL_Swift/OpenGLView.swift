@@ -303,7 +303,7 @@ class OpenGLView: UIView {
         glUniform1i(GLint(_textureUniform), 0);
         
         
-        let vertexBufferOffset = UnsafeMutablePointer<Void>(bitPattern: 0)
+        let vertexBufferOffset = UnsafePointer<Void>(bitPattern: 0)
         glDrawElements(GLenum(GL_TRIANGLES), GLsizei((_indices.count * sizeof(GLubyte))/sizeof(GLubyte)),
                        GLenum(GL_UNSIGNED_BYTE), vertexBufferOffset)
         
@@ -325,6 +325,7 @@ class OpenGLView: UIView {
         
         
         _context!.presentRenderbuffer(Int(GL_RENDERBUFFER))
+        
         return 0
     }
     
@@ -399,36 +400,6 @@ class OpenGLView: UIView {
         return texName
         
     }
-    
-    //    func getTextureFromImageWithName(fileName: String) -> GLuint {
-    //
-    //        let spriteImage: CGImage? = UIImage(named: fileName)!.cgImage
-    //
-    //        if (spriteImage == nil) {
-    //            print("Failed to load image!")
-    //            exit(1)
-    //        }
-    //
-    //        let width: Int = spriteImage!.width
-    //        let height: Int = spriteImage!.height
-    //        let spriteData = UnsafeMutablePointer<GLubyte>(calloc(Int(UInt(CGFloat(width) * CGFloat(height) * 4)), sizeof(GLubyte)))
-    //
-    //        let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
-    //        let spriteContext: CGContext = CGContext(data: spriteData, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width*4, space: spriteImage!.colorSpace!, bitmapInfo: bitmapInfo.rawValue)!
-    //
-    //        spriteContext.draw(in: CGRect(x: 0, y: 0, width: CGFloat(width) , height: CGFloat(height)), image: spriteImage!)
-    ////        CGContextRelease(spriteContext)
-    //
-    //        var texName: GLuint = GLuint()
-    //        glGenTextures(1, &texName)
-    //        glBindTexture(GLenum(GL_TEXTURE_2D), texName)
-    //
-    //        glTexParameteri(GLenum(GL_TEXTURE_2D), GLenum(GL_TEXTURE_MIN_FILTER), GL_NEAREST)
-    //        glTexImage2D(GLenum(GL_TEXTURE_2D), 0, GL_RGBA, GLsizei(width), GLsizei(height), 0, GLenum(GL_RGBA), UInt32(GL_UNSIGNED_BYTE), spriteData)
-    //
-    //        free(spriteData)
-    //        return texName
-    //    }
     
     func setupRenderBuffer() -> Int {
         glGenRenderbuffers(1, &_colorRenderBuffer)

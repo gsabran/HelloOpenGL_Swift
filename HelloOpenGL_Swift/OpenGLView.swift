@@ -23,7 +23,7 @@ struct Vertex {
     var TexCoord: (Float, Float)
 }
 
-let TEX_COORD_MAX : Float = 1.0
+let TEX_COORD_MAX : Float = 4
 
 class OpenGLView: UIView {
     var _context: EAGLContext?
@@ -36,11 +36,17 @@ class OpenGLView: UIView {
     var _positionSlot = GLuint()
     var _projectionUniform = GLuint()
     
+    // texture
     var _floorTexture = GLuint()
     var _fishTexture = GLuint()
     var _texCoordSlot = GLuint()
     var _textureUniform = GLuint()
     
+    // buffers
+    var _vertexBuffer = GLuint()
+    var _indexBuffer = GLuint()
+    var _vertexBuffer2 = GLuint()
+    var _indexBuffer2 = GLuint()
     
     var _vertices = [
         // Front
@@ -73,7 +79,7 @@ class OpenGLView: UIView {
         Vertex(Position: (1, -1, 0), Color: (0, 1, 0, 1), TexCoord: (TEX_COORD_MAX, TEX_COORD_MAX)),
         Vertex(Position: (-1, -1, 0), Color: (0, 0, 1, 1), TexCoord: (0, TEX_COORD_MAX)),
         Vertex(Position: (-1, -1, -2), Color: (0, 0, 0, 1), TexCoord: (0, 0)),
-    ]
+        ]
     
     var _indices : [GLubyte] = [
         // Front
@@ -95,6 +101,18 @@ class OpenGLView: UIView {
         20, 21, 22,
         22, 23, 20
     ]
+    
+    var _vertices2 = [
+        Vertex(Position: (0.5, -0.5, 0.01), Color: (1, 1, 1, 1), TexCoord: (1, 1)),
+        Vertex(Position: (0.5, 0.5, 0.01), Color: (1, 1, 1, 1), TexCoord: (1, 0)),
+        Vertex(Position: (-0.5, 0.5, 0.01), Color: (1, 1, 1, 1), TexCoord: (0, 0)),
+        Vertex(Position: (-0.5, -0.5, 0.01), Color: (1, 1, 1, 1), TexCoord: (0, 1)),
+        ];
+    
+    var _indices2 : [GLubyte] = [
+        1, 0, 2, 3
+    ];
+    
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -221,7 +239,7 @@ class OpenGLView: UIView {
         
         _positionSlot = GLuint(glGetAttribLocation(program, "Position"))
         glEnableVertexAttribArray(_positionSlot)
-
+        
         _colorSlot = GLuint(glGetAttribLocation(program, "SourceColor"))
         glEnableVertexAttribArray(_colorSlot)
         
@@ -261,6 +279,11 @@ class OpenGLView: UIView {
         glUniformMatrix4fv(GLint(_modelViewUniform), 1, 0, modelView!.glMatrix)
         glViewport(0, 0, GLsizei(self.frame.size.width), GLsizei(self.frame.size.height));
         
+        
+        // draw on first item
+        glBindBuffer(GLenum(GL_ARRAY_BUFFER), _vertexBuffer);
+        glBindBuffer(GLenum(GL_ELEMENT_ARRAY_BUFFER), _indexBuffer);
+        
         let positionSlotFirstComponent = UnsafePointer<Int>(bitPattern: 0)
         glEnableVertexAttribArray(_positionSlot)
         glVertexAttribPointer(_positionSlot, 3, GLenum(GL_FLOAT), GLboolean(GL_FALSE), GLsizei(sizeof(Vertex)), positionSlotFirstComponent)
@@ -281,6 +304,23 @@ class OpenGLView: UIView {
         let vertexBufferOffset = UnsafeMutablePointer<Void>(bitPattern: 0)
         glDrawElements(GLenum(GL_TRIANGLES), GLsizei((_indices.count * sizeof(GLubyte))/sizeof(GLubyte)),
                        GLenum(GL_UNSIGNED_BYTE), vertexBufferOffset)
+        
+        // draw on second item
+        glBindBuffer(GLenum(GL_ARRAY_BUFFER), _vertexBuffer2);
+        glBindBuffer(GLenum(GL_ELEMENT_ARRAY_BUFFER), _indexBuffer2);
+        
+        glActiveTexture(GLenum(GL_TEXTURE0));
+        glBindTexture(GLenum(GL_TEXTURE_2D), _fishTexture);
+        glUniform1i(GLint(_textureUniform), 0);
+        
+        glUniformMatrix4fv(GLint(_modelViewUniform), 1, 0, modelView?.glMatrix);
+        
+        glVertexAttribPointer(_positionSlot, 3, GLenum(GL_FLOAT), GLboolean(GL_FALSE), GLsizei(sizeof(Vertex)), positionSlotFirstComponent);
+        glVertexAttribPointer(_colorSlot, 4, GLenum(GL_FLOAT), GLboolean(GL_FALSE), GLsizei(sizeof(Vertex)), colorSlotFirstComponent);
+        glVertexAttribPointer(_texCoordSlot, 2, GLenum(GL_FLOAT), GLboolean(GL_FALSE), GLsizei(sizeof(Vertex)), vertexSlotFirstComponent);
+        
+        glDrawElements(GLenum(GL_TRIANGLE_STRIP), GLsizei((_indices2.count * sizeof(GLubyte))/sizeof(GLubyte)), GLenum(GL_UNSIGNED_BYTE), positionSlotFirstComponent);
+        
         
         _context!.presentRenderbuffer(Int(GL_RENDERBUFFER))
         return 0
@@ -355,38 +395,38 @@ class OpenGLView: UIView {
         
         free(spriteData)
         return texName
-
+        
     }
     
-//    func getTextureFromImageWithName(fileName: String) -> GLuint {
-//
-//        let spriteImage: CGImage? = UIImage(named: fileName)!.cgImage
-//        
-//        if (spriteImage == nil) {
-//            print("Failed to load image!")
-//            exit(1)
-//        }
-//        
-//        let width: Int = spriteImage!.width
-//        let height: Int = spriteImage!.height
-//        let spriteData = UnsafeMutablePointer<GLubyte>(calloc(Int(UInt(CGFloat(width) * CGFloat(height) * 4)), sizeof(GLubyte)))
-//        
-//        let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
-//        let spriteContext: CGContext = CGContext(data: spriteData, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width*4, space: spriteImage!.colorSpace!, bitmapInfo: bitmapInfo.rawValue)!
-//        
-//        spriteContext.draw(in: CGRect(x: 0, y: 0, width: CGFloat(width) , height: CGFloat(height)), image: spriteImage!)
-////        CGContextRelease(spriteContext)
-//        
-//        var texName: GLuint = GLuint()
-//        glGenTextures(1, &texName)
-//        glBindTexture(GLenum(GL_TEXTURE_2D), texName)
-//        
-//        glTexParameteri(GLenum(GL_TEXTURE_2D), GLenum(GL_TEXTURE_MIN_FILTER), GL_NEAREST)
-//        glTexImage2D(GLenum(GL_TEXTURE_2D), 0, GL_RGBA, GLsizei(width), GLsizei(height), 0, GLenum(GL_RGBA), UInt32(GL_UNSIGNED_BYTE), spriteData)
-//        
-//        free(spriteData)
-//        return texName
-//    }
+    //    func getTextureFromImageWithName(fileName: String) -> GLuint {
+    //
+    //        let spriteImage: CGImage? = UIImage(named: fileName)!.cgImage
+    //
+    //        if (spriteImage == nil) {
+    //            print("Failed to load image!")
+    //            exit(1)
+    //        }
+    //
+    //        let width: Int = spriteImage!.width
+    //        let height: Int = spriteImage!.height
+    //        let spriteData = UnsafeMutablePointer<GLubyte>(calloc(Int(UInt(CGFloat(width) * CGFloat(height) * 4)), sizeof(GLubyte)))
+    //
+    //        let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
+    //        let spriteContext: CGContext = CGContext(data: spriteData, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width*4, space: spriteImage!.colorSpace!, bitmapInfo: bitmapInfo.rawValue)!
+    //
+    //        spriteContext.draw(in: CGRect(x: 0, y: 0, width: CGFloat(width) , height: CGFloat(height)), image: spriteImage!)
+    ////        CGContextRelease(spriteContext)
+    //
+    //        var texName: GLuint = GLuint()
+    //        glGenTextures(1, &texName)
+    //        glBindTexture(GLenum(GL_TEXTURE_2D), texName)
+    //
+    //        glTexParameteri(GLenum(GL_TEXTURE_2D), GLenum(GL_TEXTURE_MIN_FILTER), GL_NEAREST)
+    //        glTexImage2D(GLenum(GL_TEXTURE_2D), 0, GL_RGBA, GLsizei(width), GLsizei(height), 0, GLenum(GL_RGBA), UInt32(GL_UNSIGNED_BYTE), spriteData)
+    //
+    //        free(spriteData)
+    //        return texName
+    //    }
     
     func setupRenderBuffer() -> Int {
         glGenRenderbuffers(1, &_colorRenderBuffer)
@@ -408,15 +448,23 @@ class OpenGLView: UIView {
     }
     
     func setupVBOs() -> Int {
-        var vertexBuffer = GLuint()
-        glGenBuffers(1, &vertexBuffer)
-        glBindBuffer(GLenum(GL_ARRAY_BUFFER), vertexBuffer)
+        // first object
+        glGenBuffers(1, &_vertexBuffer)
+        glBindBuffer(GLenum(GL_ARRAY_BUFFER), _vertexBuffer)
         glBufferData(GLenum(GL_ARRAY_BUFFER), (_vertices.count * sizeof(Vertex)), _vertices, GLenum(GL_STATIC_DRAW))
         
-        var indexBuffer = GLuint()
-        glGenBuffers(1, &indexBuffer)
-        glBindBuffer(GLenum(GL_ELEMENT_ARRAY_BUFFER), indexBuffer)
+        glGenBuffers(1, &_indexBuffer)
+        glBindBuffer(GLenum(GL_ELEMENT_ARRAY_BUFFER), _indexBuffer)
         glBufferData(GLenum(GL_ELEMENT_ARRAY_BUFFER), (_indices.count * sizeof(GLubyte)), _indices, GLenum(GL_STATIC_DRAW))
+        
+        // second object
+        glGenBuffers(1, &_vertexBuffer2)
+        glBindBuffer(GLenum(GL_ARRAY_BUFFER), _vertexBuffer2)
+        glBufferData(GLenum(GL_ARRAY_BUFFER), (_vertices2.count * sizeof(Vertex)), _vertices2, GLenum(GL_STATIC_DRAW))
+        
+        glGenBuffers(1, &_indexBuffer2)
+        glBindBuffer(GLenum(GL_ELEMENT_ARRAY_BUFFER), _indexBuffer2)
+        glBufferData(GLenum(GL_ELEMENT_ARRAY_BUFFER), (_indices2.count * sizeof(GLubyte)), _indices2, GLenum(GL_STATIC_DRAW))
         return 0
     }
     

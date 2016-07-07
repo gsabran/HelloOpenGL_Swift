@@ -260,6 +260,8 @@ class OpenGLView: UIView {
     }
     
     func render(displayLink: CADisplayLink) -> Int {
+        glBlendFunc(GLenum(GL_ONE), GLenum(GL_ONE_MINUS_SRC_ALPHA));
+        glEnable(GLenum(GL_BLEND));
         glClearColor(0, 104.0/255.0, 55.0/255.0, 1.0)
         glClear(GLbitfield(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT))
         glEnable(GLenum(GL_DEPTH_TEST))

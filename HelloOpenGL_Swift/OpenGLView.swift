@@ -20,32 +20,35 @@ import AVFoundation
 struct Vertex {
     var Position: (Float, Float, Float)
     var Color: (Float, Float, Float, Float)
+    var TexCoord: (Float, Float)
 }
 
 class OpenGLView: UIView {
     var _context: EAGLContext?
     var _colorRenderBuffer = GLuint()
     var _colorSlot = GLuint()
-    var _texCoordSlot = GLuint()
     var _currentRotation = Float()
     var _depthRenderBuffer = GLuint()
     var _eaglLayer: CAEAGLLayer?
     var _modelViewUniform = GLuint()
     var _positionSlot = GLuint()
     var _projectionUniform = GLuint()
+    
+    var _floorTexture = GLuint()
+    var _fishTexture = GLuint()
+    var _texCoordSlot = GLuint()
     var _textureUniform = GLuint()
-    var _textureID = GLuint()
-    var spriteImage = UIImage(named: "mountain.jpg")!.cgImage!;
+    
     
     var _vertices = [
-        Vertex(Position: ( 1, -1,  0), Color: (1, 0, 0, 1)),
-        Vertex(Position: ( 1,  1,  0), Color: (1, 0, 0, 1)),
-        Vertex(Position: (-1,  1,  0), Color: (0, 1, 0, 1)),
-        Vertex(Position: (-1, -1,  0), Color: (0, 1, 0, 1)),
-        Vertex(Position: ( 1, -1, -1), Color: (1, 0, 0, 1)),
-        Vertex(Position: ( 1,  1, -1), Color: (1, 0, 0, 1)),
-        Vertex(Position: (-1,  1, -1), Color: (0, 1, 0, 1)),
-        Vertex(Position: (-1, -1, -1), Color: (0, 1, 0, 1))
+        Vertex(Position: ( 1, -1,  0), Color: (1, 0, 0, 1), TexCoord: (1, 0)),
+        Vertex(Position: ( 1,  1,  0), Color: (1, 0, 0, 1), TexCoord: (1, 1)),
+        Vertex(Position: (-1,  1,  0), Color: (0, 1, 0, 1), TexCoord: (0, 1)),
+        Vertex(Position: (-1, -1,  0), Color: (0, 1, 0, 1), TexCoord: (0, 0)),
+        Vertex(Position: ( 1, -1, -1), Color: (1, 0, 0, 1), TexCoord: (1, 0)),
+        Vertex(Position: ( 1,  1, -1), Color: (1, 0, 0, 1), TexCoord: (1, 1)),
+        Vertex(Position: (-1,  1, -1), Color: (0, 1, 0, 1), TexCoord: (0, 1)),
+        Vertex(Position: (-1, -1, -1), Color: (0, 1, 0, 1), TexCoord: (0, 0))
     ]
     
     var _indices : [GLubyte] = [
@@ -193,12 +196,18 @@ class OpenGLView: UIView {
         glUseProgram(program)
         
         _positionSlot = GLuint(glGetAttribLocation(program, "Position"))
-        _colorSlot = GLuint(glGetAttribLocation(program, "SourceColor"))
-        _texCoordSlot = GLuint(glGetAttribLocation(program, "TexCoordIn"))
-        _textureUniform = GLuint(glGetUniformLocation(program, "Texture"))
         glEnableVertexAttribArray(_positionSlot)
+
+        _colorSlot = GLuint(glGetAttribLocation(program, "SourceColor"))
         glEnableVertexAttribArray(_colorSlot)
+        
+        _texCoordSlot = GLuint(glGetAttribLocation(program, "TexCoordIn"));
         glEnableVertexAttribArray(_texCoordSlot);
+        
+        _textureUniform = GLuint(glGetUniformLocation(program, "Texture"));
+        
+        _floorTexture = self.setupTexture(fileName: "tile_floor.png");
+        _fishTexture = self.setupTexture(fileName: "item_powerup_fish.png");
         
         _projectionUniform = GLuint(glGetUniformLocation(program, "Projection"))
         _modelViewUniform = GLuint(glGetUniformLocation(program, "Modelview"))
@@ -236,13 +245,13 @@ class OpenGLView: UIView {
         let colorSlotFirstComponent = UnsafePointer<Int>(bitPattern: sizeof(Float) * 3)
         glVertexAttribPointer(_colorSlot, 4, GLenum(GL_FLOAT), GLboolean(GL_FALSE), GLsizei(sizeof(Vertex)), colorSlotFirstComponent)
         
-        glEnableVertexAttribArray(_texCoordSlot)
-        let texCoordFirstComponent = UnsafePointer<Int>(bitPattern: sizeof(Float) * 3)
-        glVertexAttribPointer(_texCoordSlot, 2, GLenum(GL_FLOAT), GLboolean(GL_FALSE), Int32(sizeof(Vertex)), texCoordFirstComponent)
+        let vertexSlotFirstComponent = UnsafePointer<Int>(bitPattern: sizeof(GLfloat) * 7)
+        glVertexAttribPointer(_texCoordSlot, 2, GLenum(GL_FLOAT), GLboolean(GL_FALSE),
+                              GLsizei(sizeof(Vertex)), vertexSlotFirstComponent);
         
-        glActiveTexture(UInt32(GL_TEXTURE0))
-        glBindTexture(GLenum(GL_TEXTURE_2D), _textureID)
-        glUniform1i(GLint(_textureUniform), 0)
+        glActiveTexture(GLenum(GL_TEXTURE0));
+        glBindTexture(GLenum(GL_TEXTURE_2D), _floorTexture);
+        glUniform1i(GLint(_textureUniform), 0);
         
         
         let vertexBufferOffset = UnsafeMutablePointer<Void>(bitPattern: 0)
@@ -301,6 +310,59 @@ class OpenGLView: UIView {
         return 0
     }
     
+    func setupTexture(fileName: String) -> GLuint{
+        let spriteImage: CGImage? = UIImage(named: fileName)?.cgImage
+        if (spriteImage == nil) {
+            print("Failed to load image!")
+            exit(1)
+        }
+        let width: Int = spriteImage!.width
+        let height: Int = spriteImage!.height
+        let spriteData = UnsafeMutablePointer<GLubyte>(calloc(Int(UInt(CGFloat(width) * CGFloat(height) * 4)), sizeof(GLubyte)))
+        
+        let spriteContext: CGContext = CGContext(data: spriteData, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width*4, space: spriteImage!.colorSpace!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        spriteContext.draw(in: CGRect(x: 0, y: 0, width: CGFloat(width) , height: CGFloat(height)), image: spriteImage!)
+        var texName: GLuint = GLuint()
+        glGenTextures(1, &texName)
+        glBindTexture(GLenum(GL_TEXTURE_2D), texName)
+        
+        glTexParameteri(GLenum(GL_TEXTURE_2D), GLenum(GL_TEXTURE_MIN_FILTER), GL_NEAREST)
+        glTexImage2D(GLenum(GL_TEXTURE_2D), 0, GL_RGBA, GLsizei(width), GLsizei(height), 0, GLenum(GL_RGBA), UInt32(GL_UNSIGNED_BYTE), spriteData)
+        
+        free(spriteData)
+        return texName
+
+    }
+    
+//    func getTextureFromImageWithName(fileName: String) -> GLuint {
+//
+//        let spriteImage: CGImage? = UIImage(named: fileName)!.cgImage
+//        
+//        if (spriteImage == nil) {
+//            print("Failed to load image!")
+//            exit(1)
+//        }
+//        
+//        let width: Int = spriteImage!.width
+//        let height: Int = spriteImage!.height
+//        let spriteData = UnsafeMutablePointer<GLubyte>(calloc(Int(UInt(CGFloat(width) * CGFloat(height) * 4)), sizeof(GLubyte)))
+//        
+//        let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
+//        let spriteContext: CGContext = CGContext(data: spriteData, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width*4, space: spriteImage!.colorSpace!, bitmapInfo: bitmapInfo.rawValue)!
+//        
+//        spriteContext.draw(in: CGRect(x: 0, y: 0, width: CGFloat(width) , height: CGFloat(height)), image: spriteImage!)
+////        CGContextRelease(spriteContext)
+//        
+//        var texName: GLuint = GLuint()
+//        glGenTextures(1, &texName)
+//        glBindTexture(GLenum(GL_TEXTURE_2D), texName)
+//        
+//        glTexParameteri(GLenum(GL_TEXTURE_2D), GLenum(GL_TEXTURE_MIN_FILTER), GL_NEAREST)
+//        glTexImage2D(GLenum(GL_TEXTURE_2D), 0, GL_RGBA, GLsizei(width), GLsizei(height), 0, GLenum(GL_RGBA), UInt32(GL_UNSIGNED_BYTE), spriteData)
+//        
+//        free(spriteData)
+//        return texName
+//    }
     
     func setupRenderBuffer() -> Int {
         glGenRenderbuffers(1, &_colorRenderBuffer)

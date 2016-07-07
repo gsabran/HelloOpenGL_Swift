@@ -22,6 +22,8 @@
 		21D0C3DE1B8CDEA300E51C72 /* CC3Math.m in Sources */ = {isa = PBXBuildFile; fileRef = 21D0C3D91B8CDEA300E51C72 /* CC3Math.m */; };
 		21D0C3E01B8CDEC700E51C72 /* OpenGLView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21D0C3DF1B8CDEC700E51C72 /* OpenGLView.swift */; };
 		6FB8CAF71D2EEBA3005B634B /* mountain.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 6FB8CAF61D2EEBA3005B634B /* mountain.jpg */; };
+		6FB8CAFA1D2F0FFD005B634B /* item_powerup_fish.png in Resources */ = {isa = PBXBuildFile; fileRef = 6FB8CAF81D2F0FFD005B634B /* item_powerup_fish.png */; };
+		6FB8CAFB1D2F0FFD005B634B /* tile_floor.png in Resources */ = {isa = PBXBuildFile; fileRef = 6FB8CAF91D2F0FFD005B634B /* tile_floor.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,6 +72,8 @@
 		21D0C3DA1B8CDEA300E51C72 /* ccTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccTypes.h; sourceTree = "<group>"; };
 		21D0C3DF1B8CDEC700E51C72 /* OpenGLView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OpenGLView.swift; sourceTree = "<group>"; };
 		6FB8CAF61D2EEBA3005B634B /* mountain.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = mountain.jpg; sourceTree = "<group>"; };
+		6FB8CAF81D2F0FFD005B634B /* item_powerup_fish.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = item_powerup_fish.png; sourceTree = "<group>"; };
+		6FB8CAF91D2F0FFD005B634B /* tile_floor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = tile_floor.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -127,6 +131,8 @@
 				21D0C3A01B8CDE4000E51C72 /* Main.storyboard */,
 				21D0C3A31B8CDE4000E51C72 /* Assets.xcassets */,
 				6FB8CAF61D2EEBA3005B634B /* mountain.jpg */,
+				6FB8CAF81D2F0FFD005B634B /* item_powerup_fish.png */,
+				6FB8CAF91D2F0FFD005B634B /* tile_floor.png */,
 				21D0C3A51B8CDE4000E51C72 /* LaunchScreen.storyboard */,
 				21D0C3A81B8CDE4000E51C72 /* Info.plist */,
 				21D0C3CA1B8CDE6E00E51C72 /* Cocos3DMathLib */,
@@ -285,6 +291,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6FB8CAFB1D2F0FFD005B634B /* tile_floor.png in Resources */,
+				6FB8CAFA1D2F0FFD005B634B /* item_powerup_fish.png in Resources */,
 				21D0C3A71B8CDE4000E51C72 /* LaunchScreen.storyboard in Resources */,
 				21D0C3CE1B8CDE9100E51C72 /* SimpleVertex.glsl in Resources */,
 				6FB8CAF71D2EEBA3005B634B /* mountain.jpg in Resources */,

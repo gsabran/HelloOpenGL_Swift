@@ -103,9 +103,6 @@ class OpenGLView: UIView {
         if (self.setupDisplayLink() != 0) {
             NSLog("OpenGLView init():  setupDisplayLink() failed")
         }
-//        if (self.setupTexture() != 0) {
-//            NSLog("OpenGLView init():  setupTexture() failed")
-//        }
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -304,59 +301,6 @@ class OpenGLView: UIView {
         return 0
     }
     
-//    func setupTexture() -> Int {
-//        let width: Int = spriteImage.width
-//        let height: Int = spriteImage.height
-//        let spriteData = UnsafeMutablePointer<Void>(calloc(Int(UInt(CGFloat(width) * CGFloat(height) * 4)), sizeof(GLubyte.self)))
-//        
-//        let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
-//        let spriteContext: CGContext = CGContext(data: spriteData, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width*4, space: spriteImage.colorSpace!, bitmapInfo: bitmapInfo.rawValue)!
-//        
-//        spriteContext.draw(in: CGRect(x: 0, y: 0, width: CGFloat(width) , height: CGFloat(height)), image: spriteImage)
-////        CGContextRelease(spriteContext)
-//        
-//        var texName: GLuint = GLuint()
-//        glGenTextures(1, &texName)
-//        glBindTexture(GLenum(GL_TEXTURE_2D), texName)
-//        
-//        glTexParameteri(GLenum(GL_TEXTURE_2D), GLenum(GL_TEXTURE_MIN_FILTER), GL_NEAREST)
-//        glTexImage2D(GLenum(GL_TEXTURE_2D), 0, GL_RGBA, GLsizei(width), GLsizei(height), 0, GLenum(GL_RGBA), UInt32(GL_UNSIGNED_BYTE), spriteData)
-//        
-//        free(spriteData)
-//        _textureID = texName
-//        _textureID = getTextureFromImageWithName(fileName: "mountain.jpg")
-//        return 0
-//    }
-    
-//    func getTextureFromImageWithName(fileName: String) -> GLuint {
-//        
-//        let spriteImage: CGImage? = UIImage(named: fileName)!.cgImage
-//        
-//        if (spriteImage == nil) {
-//            print("Failed to load image!")
-//            exit(1)
-//        }
-//        
-//        let width: Int = spriteImage!.width
-//        let height: Int = spriteImage!.height
-//        let spriteData = UnsafeMutablePointer<GLubyte>(calloc(Int(UInt(CGFloat(width) * CGFloat(height) * 4)), sizeof(GLubyte)))
-//        
-//        let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
-//        let spriteContext: CGContext = CGContext(data: spriteData, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width*4, space: spriteImage!.colorSpace!, bitmapInfo: bitmapInfo.rawValue)!
-//        
-//        spriteContext.draw(in: CGRect(x: 0, y: 0, width: CGFloat(width) , height: CGFloat(height)), image: spriteImage!)
-////        CGContextRelease(spriteContext)
-//        
-//        var texName: GLuint = GLuint()
-//        glGenTextures(1, &texName)
-//        glBindTexture(GLenum(GL_TEXTURE_2D), texName)
-//        
-//        glTexParameteri(GLenum(GL_TEXTURE_2D), GLenum(GL_TEXTURE_MIN_FILTER), GL_NEAREST)
-//        glTexImage2D(GLenum(GL_TEXTURE_2D), 0, GL_RGBA, GLsizei(width), GLsizei(height), 0, GLenum(GL_RGBA), UInt32(GL_UNSIGNED_BYTE), spriteData)
-//        
-//        free(spriteData)
-//        return texName
-//    }
     
     func setupRenderBuffer() -> Int {
         glGenRenderbuffers(1, &_colorRenderBuffer)
